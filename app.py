@@ -1,6 +1,5 @@
-from flask import Flask, render_template, jsonify
-import psutil
-from datetime import datetime
+import subprocess
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
@@ -8,16 +7,24 @@ app = Flask(__name__)
 def home():
     return render_template("index.html")
 
-@app.route("/api/stats")
-def stats():
-    cpu_usage = psutil.cpu_percent(interval=1)
-    memory = psutil.virtual_memory()
+@app.route("/nginx_status")
+def nginx_status():
+    result = subprocess.run(
+        ["systemctl", "is-active", "nginx"],
+        capture_output=True,
+        text=True
+    )
 
-    return jsonify({
-        "cpu": cpu_usage,
-        "memory": memory.percent,
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    })
+    status = result.stdout.strip()
+
+    if status == "active":
+        return """Active connections: 1
+Nginx service status: active
+server accepts handled requests
+1 1 1
+""", 200, {"Content-Type": "text/plain"}
+
+    return f"Nginx service status: {status}\n", 503, {"Content-Type": "text/plain"}
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="127.0.0.1", port=5000)
