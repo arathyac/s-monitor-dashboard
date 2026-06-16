@@ -1,17 +1,22 @@
-async function getServerStats() {
-    try {
-        const response = await fetch("/api/stats");
-        const data = await response.json();
-
-        document.getElementById("cpu").innerText = data.cpu + "%";
-        document.getElementById("memory").innerText = data.memory + "%";
-        document.getElementById("time").innerText = data.time;
-    } catch (error) {
-        document.getElementById("cpu").innerText = "Error";
-        document.getElementById("memory").innerText = "Error";
-        document.getElementById("time").innerText = "Unable to load data";
-    }
+function getRandomUsage(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-getServerStats();
-setInterval(getServerStats, 3000);
+function updateDashboard() {
+  const cpu = getRandomUsage(20, 85);
+  const memory = getRandomUsage(30, 90);
+  const disk = getRandomUsage(40, 95);
+
+  document.getElementById("cpuValue").textContent = cpu + "%";
+  document.getElementById("memoryValue").textContent = memory + "%";
+  document.getElementById("diskValue").textContent = disk + "%";
+
+  document.getElementById("cpuBar").style.width = cpu + "%";
+  document.getElementById("memoryBar").style.width = memory + "%";
+  document.getElementById("diskBar").style.width = disk + "%";
+
+  document.getElementById("lastUpdated").textContent = new Date().toLocaleTimeString();
+}
+
+updateDashboard();
+setInterval(updateDashboard, 3000);
