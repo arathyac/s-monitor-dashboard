@@ -45,7 +45,7 @@ pipeline {
         success {
             emailext(
                 to: 'arathyac2004@gmail.com',
-                subject: 'SUCCESS: Server Monitoring Dashboard Deployment',
+                subject: 'SUCCESS: Server Monitoring Dashboard Deployment'
                 body: """
 Hello Arathy,
 
@@ -59,6 +59,9 @@ Status: SUCCESS
 Regards,
 Jenkins
 """
+=======
+                body: 'The latest deployment was successful.'
+
             )
         }
 
@@ -66,6 +69,7 @@ Jenkins
             emailext(
                 to: 'arathyac2004@gmail.com',
                 subject: 'FAILED: Server Monitoring Dashboard Deployment',
+
                 body: """
 Hello Arathy,
 
@@ -81,6 +85,9 @@ Please check Jenkins Console Output.
 Regards,
 Jenkins
 """
+=======
+                body: 'The latest deployment failed. Please check Jenkins console output.'
+
             )
         }
     }
