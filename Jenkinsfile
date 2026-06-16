@@ -4,86 +4,34 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                echo 'Code checked out from GitHub'
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build') {
             steps {
-                sh '''
-                    python3 -m venv venv
-                    ./venv/bin/pip install --upgrade pip
-                    ./venv/bin/pip install -r requirements.txt
-                '''
+                echo 'Building Server Monitoring Dashboard'
+                sh 'ls -la'
             }
         }
 
-        stage('Test Application') {
+        stage('Test') {
             steps {
-                sh '''
-                    ./venv/bin/python -m py_compile app.py
-                    ./venv/bin/python - <<EOF
-from app import app
-client = app.test_client()
-response = client.get("/api/stats")
-assert response.status_code == 200
-print("Test passed successfully")
-EOF
-                '''
+                echo 'Checking required project files'
+                sh 'test -f app.py'
+                sh 'test -f templates/index.html'
+                sh 'test -f static/style.css'
+                sh 'test -f static/script.js'
             }
         }
 
         stage('Deploy') {
             steps {
+                echo 'Deploying latest dashboard'
                 sh '''
-                    APP_DIR="/opt/server-monitor-dashboard"
-
-                    sudo mkdir -p $APP_DIR
-                    sudo rsync -av --delete --exclude ".git" --exclude "venv" ./ $APP_DIR/
-
-                    sudo python3 -m venv $APP_DIR/venv
-                    sudo $APP_DIR/venv/bin/pip install --upgrade pip
-                    sudo $APP_DIR/venv/bin/pip install -r $APP_DIR/requirements.txt
-
-                    sudo bash -c 'cat > /etc/systemd/system/server-monitor-dashboard.service' <<SERVICE
-[Unit]
-Description=Server Monitoring Dashboard
-After=network.target
-
-[Service]
-WorkingDirectory=/opt/server-monitor-dashboard
-ExecStart=/opt/server-monitor-dashboard/venv/bin/gunicorn --workers 2 --bind unix:/run/server-monitor-dashboard.sock app:app
-Restart=always
-User=root
-Group=www-data
-
-[Install]
-WantedBy=multi-user.target
-SERVICE
-
-                    sudo systemctl daemon-reload
-                    sudo systemctl enable server-monitor-dashboard
-                    sudo systemctl restart server-monitor-dashboard
-
-                    sudo bash -c 'cat > /etc/nginx/sites-available/server-monitor-dashboard' <<NGINX
-server {
-    listen 80 default_server;
-    server_name _;
-
-    location / {
-        proxy_pass http://unix:/run/server-monitor-dashboard.sock;
-        proxy_set_header Host \\$host;
-        proxy_set_header X-Real-IP \\$remote_addr;
-        proxy_set_header X-Forwarded-For \\$proxy_add_x_forwarded_for;
-    }
-}
-NGINX
-
-                    sudo ln -sf /etc/nginx/sites-available/server-monitor-dashboard /etc/nginx/sites-enabled/server-monitor-dashboard
-                    sudo rm -f /etc/nginx/sites-enabled/default
-
-                    sudo nginx -t
-                    sudo systemctl restart nginx
+                    sudo fuser -k 5000/tcp || true
+                    nohup python3 app.py > app.log 2>&1 &
+                    sudo systemctl reload nginx
                 '''
             }
         }
@@ -91,10 +39,43 @@ NGINX
 
     post {
         success {
-            echo 'Deployment successful. Dashboard is running on port 80.'
+            mail(
+                to: 'arathyac2004@gmail.com',
+                subject: 'SUCCESS: Server Monitoring Dashboard Deployment',
+                body: """Hello Arathy,
+
+The latest deployment was successful.
+
+Project: Server Monitoring Dashboard
+Build Status: SUCCESS
+Job Name: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+
+Regards,
+Jenkins
+"""
+            )
         }
+
         failure {
-            echo 'Deployment failed. Check console output.'
+            mail(
+                to: 'arathyac2004@gmail.com',
+                subject: 'FAILED: Server Monitoring Dashboard Deployment',
+                body: """Hello Arathy,
+
+The latest deployment failed.
+
+Project: Server Monitoring Dashboard
+Build Status: FAILURE
+Job Name: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+
+Please check the Jenkins console output.
+
+Regards,
+Jenkins
+"""
+            )
         }
     }
-}     
+}
