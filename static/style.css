@@ -1,4 +1,4 @@
-cat > static/style.css <<'EOF'
+
 * {
     margin: 0;
     padding: 0;
@@ -59,4 +59,4 @@ h2 {
     font-size: 20px;
     font-weight: bold;
 }
-EOF
+

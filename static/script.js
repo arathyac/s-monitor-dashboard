@@ -1,4 +1,4 @@
-cat > static/script.js <<'EOF'
+
 function randomValue(min, max) {
     return (Math.random() * (max - min) + min).toFixed(1);
 }
@@ -14,4 +14,3 @@ function updateDashboard() {
 
 updateDashboard();
 setInterval(updateDashboard, 3000);
-EOF
