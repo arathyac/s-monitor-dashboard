@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo 'Code checked out from GitHub'
@@ -18,6 +19,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Checking required project files'
+
                 sh 'test -f app.py'
                 sh 'test -f templates/index.html'
                 sh 'test -f static/style.css'
@@ -28,6 +30,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying latest dashboard'
+
                 sh '''
                     sudo fuser -k 5000/tcp || true
                     nohup python3 app.py > app.log 2>&1 &
@@ -38,18 +41,20 @@ pipeline {
     }
 
     post {
+
         success {
-            mail(
+            emailext(
                 to: 'arathyac2004@gmail.com',
                 subject: 'SUCCESS: Server Monitoring Dashboard Deployment',
-                body: """Hello Arathy,
+                body: """
+Hello Arathy,
 
 The latest deployment was successful.
 
 Project: Server Monitoring Dashboard
-Build Status: SUCCESS
 Job Name: ${env.JOB_NAME}
 Build Number: ${env.BUILD_NUMBER}
+Status: SUCCESS
 
 Regards,
 Jenkins
@@ -58,19 +63,20 @@ Jenkins
         }
 
         failure {
-            mail(
+            emailext(
                 to: 'arathyac2004@gmail.com',
                 subject: 'FAILED: Server Monitoring Dashboard Deployment',
-                body: """Hello Arathy,
+                body: """
+Hello Arathy,
 
 The latest deployment failed.
 
 Project: Server Monitoring Dashboard
-Build Status: FAILURE
 Job Name: ${env.JOB_NAME}
 Build Number: ${env.BUILD_NUMBER}
+Status: FAILURE
 
-Please check the Jenkins console output.
+Please check Jenkins Console Output.
 
 Regards,
 Jenkins
