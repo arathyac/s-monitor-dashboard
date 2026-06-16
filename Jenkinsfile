@@ -39,42 +39,18 @@ pipeline {
 
     post {
         success {
-            mail(
+            emailext(
                 to: 'arathyac2004@gmail.com',
                 subject: 'SUCCESS: Server Monitoring Dashboard Deployment',
-                body: """Hello Arathy,
-
-The latest deployment was successful.
-
-Project: Server Monitoring Dashboard
-Build Status: SUCCESS
-Job Name: ${env.JOB_NAME}
-Build Number: ${env.BUILD_NUMBER}
-
-Regards,
-Jenkins
-"""
+                body: 'The latest deployment was successful.'
             )
         }
 
         failure {
-            mail(
+            emailext(
                 to: 'arathyac2004@gmail.com',
                 subject: 'FAILED: Server Monitoring Dashboard Deployment',
-                body: """Hello Arathy,
-
-The latest deployment failed.
-
-Project: Server Monitoring Dashboard
-Build Status: FAILURE
-Job Name: ${env.JOB_NAME}
-Build Number: ${env.BUILD_NUMBER}
-
-Please check the Jenkins console output.
-
-Regards,
-Jenkins
-"""
+                body: 'The latest deployment failed. Please check Jenkins console output.'
             )
         }
     }
